@@ -67,6 +67,10 @@ app.use('/api/settings', settingsRouter);
 app.use('/api/upload', uploadRouter);
 
 // Root Route Redirecting or status check
+app.get('/', (_req, res) => {
+  res.status(200).json({ success: true, message: 'Welcome to the TailorFlow API backend!' });
+});
+
 app.get('/health', (_req, res) => {
   res.status(200).json({ success: true, message: 'TailorFlow backend is running healthy!' });
 });
