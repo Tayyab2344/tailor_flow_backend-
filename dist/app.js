@@ -94,6 +94,9 @@ app.use('/api/notifications', notification_routes_1.default);
 app.use('/api/settings', settings_routes_1.default);
 app.use('/api/upload', upload_routes_1.default);
 // Root Route Redirecting or status check
+app.get('/', (_req, res) => {
+    res.status(200).json({ success: true, message: 'Welcome to the TailorFlow API backend!' });
+});
 app.get('/health', (_req, res) => {
     res.status(200).json({ success: true, message: 'TailorFlow backend is running healthy!' });
 });

@@ -22,12 +22,13 @@ winston_1.default.addColors(colors);
 const format = winston_1.default.format.combine(winston_1.default.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }), winston_1.default.format.colorize({ all: true }), winston_1.default.format.printf((info) => `[${info.timestamp}] [${info.level}]: ${info.message}`));
 const transports = [
     new winston_1.default.transports.Console(),
-    new winston_1.default.transports.File({
+];
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+    transports.push(new winston_1.default.transports.File({
         filename: 'logs/error.log',
         level: 'error',
-    }),
-    new winston_1.default.transports.File({ filename: 'logs/combined.log' }),
-];
+    }), new winston_1.default.transports.File({ filename: 'logs/combined.log' }));
+}
 const logger = winston_1.default.createLogger({
     level: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
     levels,
