@@ -5,6 +5,7 @@ node_modules/
 # Environmental configuration
 .env
 .env.local
+.env.example
 
 # Logs
 logs/
