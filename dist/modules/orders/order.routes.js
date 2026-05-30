@@ -1,0 +1,18 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const order_controller_1 = require("./order.controller");
+const validate_1 = require("../../middleware/validate");
+const order_validation_1 = require("./order.validation");
+const auth_1 = require("../../middleware/auth");
+const client_1 = require("@prisma/client");
+const router = (0, express_1.Router)();
+router.use(auth_1.authenticateUser);
+router.post('/', (0, auth_1.authorizeRoles)([client_1.UserRole.ADMIN, client_1.UserRole.MANAGER, client_1.UserRole.RECEPTIONIST]), (0, validate_1.validate)(order_validation_1.createOrderSchema), order_controller_1.OrderController.create);
+router.get('/', (0, auth_1.authorizeRoles)([client_1.UserRole.ADMIN, client_1.UserRole.MANAGER, client_1.UserRole.TAILOR, client_1.UserRole.RECEPTIONIST, client_1.UserRole.CASHIER]), (0, validate_1.validate)(order_validation_1.orderQuerySchema), order_controller_1.OrderController.getAll);
+router.get('/:id', (0, auth_1.authorizeRoles)([client_1.UserRole.ADMIN, client_1.UserRole.MANAGER, client_1.UserRole.TAILOR, client_1.UserRole.RECEPTIONIST, client_1.UserRole.CASHIER]), order_controller_1.OrderController.getOne);
+router.put('/:id', (0, auth_1.authorizeRoles)([client_1.UserRole.ADMIN, client_1.UserRole.MANAGER, client_1.UserRole.RECEPTIONIST]), (0, validate_1.validate)(order_validation_1.updateOrderSchema), order_controller_1.OrderController.update);
+router.delete('/:id', (0, auth_1.authorizeRoles)([client_1.UserRole.ADMIN]), order_controller_1.OrderController.delete);
+router.patch('/:id/status', (0, auth_1.authorizeRoles)([client_1.UserRole.ADMIN, client_1.UserRole.MANAGER, client_1.UserRole.TAILOR, client_1.UserRole.RECEPTIONIST]), (0, validate_1.validate)(order_validation_1.patchStatusSchema), order_controller_1.OrderController.patchStatus);
+router.patch('/:id/assign-tailor', (0, auth_1.authorizeRoles)([client_1.UserRole.ADMIN, client_1.UserRole.MANAGER]), (0, validate_1.validate)(order_validation_1.patchTailorSchema), order_controller_1.OrderController.patchTailor);
+exports.default = router;

@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const payment_controller_1 = require("./payment.controller");
+const validate_1 = require("../../middleware/validate");
+const payment_validation_1 = require("./payment.validation");
+const auth_1 = require("../../middleware/auth");
+const client_1 = require("@prisma/client");
+const router = (0, express_1.Router)();
+router.use(auth_1.authenticateUser);
+router.post('/', (0, auth_1.authorizeRoles)([client_1.UserRole.ADMIN, client_1.UserRole.MANAGER, client_1.UserRole.RECEPTIONIST, client_1.UserRole.CASHIER]), (0, validate_1.validate)(payment_validation_1.createPaymentSchema), payment_controller_1.PaymentController.create);
+router.get('/', (0, auth_1.authorizeRoles)([client_1.UserRole.ADMIN, client_1.UserRole.MANAGER, client_1.UserRole.RECEPTIONIST, client_1.UserRole.CASHIER]), payment_controller_1.PaymentController.getAll);
+router.get('/:id', (0, auth_1.authorizeRoles)([client_1.UserRole.ADMIN, client_1.UserRole.MANAGER, client_1.UserRole.RECEPTIONIST, client_1.UserRole.CASHIER]), payment_controller_1.PaymentController.getOne);
+router.put('/:id', (0, auth_1.authorizeRoles)([client_1.UserRole.ADMIN, client_1.UserRole.MANAGER, client_1.UserRole.CASHIER]), (0, validate_1.validate)(payment_validation_1.updatePaymentSchema), payment_controller_1.PaymentController.update);
+router.delete('/:id', (0, auth_1.authorizeRoles)([client_1.UserRole.ADMIN, client_1.UserRole.MANAGER]), payment_controller_1.PaymentController.delete);
+exports.default = router;

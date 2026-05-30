@@ -1,0 +1,225 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  TAILOR
+  RECEPTIONIST
+  CASHIER
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+  ON_LEAVE
+}
+
+enum OrderStatus {
+  PENDING
+  MEASURING
+  CUTTING
+  STITCHING
+  EMBROIDERY
+  IRONING
+  QUALITY_CHECK
+  READY
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  BANK
+  JAZZCASH
+  EASYPAISA
+  CARD
+}
+
+model Business {
+  id        String    @id @default(uuid())
+  name      String
+  logo      String?
+  phone     String?
+  email     String?
+  address   String?
+  city      String?
+  currency  String    @default("USD")
+  language  String    @default("en")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  users        User[]
+  customers    Customer[]
+  employees    Employee[]
+  orders       Order[]
+  settings     Settings?
+}
+
+model User {
+  id           String    @id @default(uuid())
+  businessId   String?
+  name         String
+  email        String    @unique
+  password     String
+  role         UserRole  @default(ADMIN)
+  profileImage String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  // Relations
+  business       Business?       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  notifications  Notification[]
+  timelines      OrderTimeline[]
+  employeeRecord Employee?       @relation("UserToEmployee")
+}
+
+model Customer {
+  id           String    @id @default(uuid())
+  businessId   String
+  name         String
+  phone        String
+  email        String?
+  gender       String
+  address      String?
+  notes        String?
+  profileImage String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  // Relations
+  business     Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  measurements Measurement[]
+  orders       Order[]
+}
+
+model Measurement {
+  id              String    @id @default(uuid())
+  customerId      String
+  templateName    String
+  gender          String
+  measurementData Json      // Stores custom measurements as JSON: { "neck": 15, "chest": 38, ... }
+  notes           String?
+  referenceImages Json?     // JSON array of strings: ["url1", "url2"]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  // Relations
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  orders   Order[]
+}
+
+model Employee {
+  id           String         @id @default(uuid())
+  businessId   String
+  userId       String?        @unique
+  name         String
+  phone        String
+  role         UserRole       @default(TAILOR)
+  status       EmployeeStatus @default(ACTIVE)
+  joinDate     DateTime       @default(now())
+  profileImage String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  deletedAt    DateTime?
+
+  // Relations
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user     User?    @relation("UserToEmployee", fields: [userId], references: [id], onDelete: SetNull)
+  orders   Order[]
+}
+
+model Order {
+  id               String      @id @default(uuid())
+  businessId       String
+  customerId       String
+  measurementId    String?
+  assignedTailorId String?
+  dressType        String
+  fabricDetails    String?
+  quantity         Int         @default(1)
+  price            Decimal     @db.Decimal(10, 2)
+  advanceAmount    Decimal     @db.Decimal(10, 2) @default(0.00)
+  remainingAmount  Decimal     @db.Decimal(10, 2) @default(0.00)
+  status           OrderStatus @default(PENDING)
+  deliveryDate     DateTime
+  notes            String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  deletedAt        DateTime?
+
+  // Relations
+  business       Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customer       Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  measurement    Measurement?   @relation(fields: [measurementId], references: [id], onDelete: SetNull)
+  assignedTailor Employee?      @relation(fields: [assignedTailorId], references: [id], onDelete: SetNull)
+  timelines      OrderTimeline[]
+  payments       Payment[]
+}
+
+model OrderTimeline {
+  id             String      @id @default(uuid())
+  orderId        String
+  previousStatus OrderStatus?
+  newStatus      OrderStatus
+  updatedBy      String
+  createdAt      DateTime    @default(now())
+
+  // Relations
+  order          Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  updatedByUser  User  @relation(fields: [updatedBy], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id                   String        @id @default(uuid())
+  orderId              String
+  amount               Decimal       @db.Decimal(10, 2)
+  paymentMethod        PaymentMethod @default(CASH)
+  transactionReference String?
+  notes                String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  deletedAt            DateTime?
+
+  // Relations
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Settings {
+  id                  String   @id @default(uuid())
+  businessId          String   @unique
+  workflowSettings    Json     // Custom steps configuration
+  currency            String   @default("USD")
+  language            String   @default("en")
+  theme               String   @default("dark")
+  notificationSettings Json     // SMS, Email, Whatsapp toggles
+  businessPreferences Json     // Layout, printer margins etc.
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // Relations
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}

@@ -1,0 +1,316 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "TailorFlow Backend API",
+    "version": "1.0.0",
+    "description": "Production-ready backend API documentation for TailorFlow - premium tailoring management platform"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000/api",
+      "description": "Local Development Server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "ApiResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "data": { "type": "object" }
+        }
+      },
+      "ApiError": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "message": { "type": "string" },
+          "errors": {
+            "type": "array",
+            "items": { "type": "object" }
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "summary": "Register a new user and business",
+        "tags": ["Authentication"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "email", "password", "businessName"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string", "minLength": 6 },
+                  "businessName": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful registration",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } }
+          },
+          "400": { "description": "Validation failed" },
+          "409": { "description": "Email already exists" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Login user to retrieve tokens",
+        "tags": ["Authentication"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login successful" },
+          "401": { "description": "Invalid credentials" }
+        }
+      }
+    },
+    "/auth/profile": {
+      "get": {
+        "summary": "Retrieve currently authenticated user profile",
+        "tags": ["Authentication"],
+        "responses": {
+          "200": { "description": "Profile details retrieved" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/business": {
+      "get": {
+        "summary": "Get details of active business context",
+        "tags": ["Business"],
+        "responses": {
+          "200": { "description": "Business profile retrieved" }
+        }
+      },
+      "put": {
+        "summary": "Update active business profile details",
+        "tags": ["Business"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "phone": { "type": "string" },
+                  "email": { "type": "string" },
+                  "address": { "type": "string" },
+                  "city": { "type": "string" },
+                  "currency": { "type": "string" },
+                  "language": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Business updated" }
+        }
+      }
+    },
+    "/customers": {
+      "post": {
+        "summary": "Create customer profile",
+        "tags": ["Customer"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "phone", "gender"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "phone": { "type": "string" },
+                  "email": { "type": "string" },
+                  "gender": { "type": "string" },
+                  "address": { "type": "string" },
+                  "notes": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Customer created" }
+        }
+      },
+      "get": {
+        "summary": "List customers with search, sort, and pagination filters",
+        "tags": ["Customer"],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer" } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "gender", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Customers list retrieved" }
+        }
+      }
+    },
+    "/measurements": {
+      "post": {
+        "summary": "Save a new customer measurement profile",
+        "tags": ["Measurement"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["customerId", "templateName", "gender", "measurementData"],
+                "properties": {
+                  "customerId": { "type": "string", "format": "uuid" },
+                  "templateName": { "type": "string" },
+                  "gender": { "type": "string" },
+                  "measurementData": { "type": "object" },
+                  "notes": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Measurement saved" }
+        }
+      }
+    },
+    "/orders": {
+      "post": {
+        "summary": "Create a new tailoring order",
+        "tags": ["Order"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["customerId", "dressType", "price", "deliveryDate"],
+                "properties": {
+                  "customerId": { "type": "string" },
+                  "measurementId": { "type": "string" },
+                  "assignedTailorId": { "type": "string" },
+                  "dressType": { "type": "string" },
+                  "fabricDetails": { "type": "string" },
+                  "quantity": { "type": "integer" },
+                  "price": { "type": "number" },
+                  "advanceAmount": { "type": "number" },
+                  "deliveryDate": { "type": "string", "format": "date-time" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Order created and timeline initiated" }
+        }
+      }
+    },
+    "/orders/{id}/status": {
+      "patch": {
+        "summary": "Update order workflow status and trigger timeline track",
+        "tags": ["Order"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["status"],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": ["PENDING", "MEASURING", "CUTTING", "STITCHING", "EMBROIDERY", "IRONING", "QUALITY_CHECK", "READY", "DELIVERED", "CANCELLED"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Order status updated and logged to history" }
+        }
+      }
+    },
+    "/dashboard/stats": {
+      "get": {
+        "summary": "Retrieve metrics totals and revenue for dashboard panels",
+        "tags": ["Dashboard & Analytics"],
+        "responses": {
+          "200": { "description": "Dashboard summary statistics" }
+        }
+      }
+    },
+    "/upload": {
+      "post": {
+        "summary": "Upload a file/image to Cloudinary storage",
+        "tags": ["File Upload"],
+        "parameters": [
+          { "name": "folder", "in": "query", "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "File stored successfully" }
+        }
+      }
+    }
+  }
+}

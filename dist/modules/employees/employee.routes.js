@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const employee_controller_1 = require("./employee.controller");
+const validate_1 = require("../../middleware/validate");
+const employee_validation_1 = require("./employee.validation");
+const auth_1 = require("../../middleware/auth");
+const client_1 = require("@prisma/client");
+const router = (0, express_1.Router)();
+router.use(auth_1.authenticateUser);
+router.post('/', (0, auth_1.authorizeRoles)([client_1.UserRole.ADMIN, client_1.UserRole.MANAGER]), (0, validate_1.validate)(employee_validation_1.createEmployeeSchema), employee_controller_1.EmployeeController.create);
+router.get('/', (0, auth_1.authorizeRoles)([client_1.UserRole.ADMIN, client_1.UserRole.MANAGER, client_1.UserRole.RECEPTIONIST, client_1.UserRole.CASHIER]), employee_controller_1.EmployeeController.getAll);
+router.get('/:id', (0, auth_1.authorizeRoles)([client_1.UserRole.ADMIN, client_1.UserRole.MANAGER, client_1.UserRole.RECEPTIONIST]), employee_controller_1.EmployeeController.getOne);
+router.put('/:id', (0, auth_1.authorizeRoles)([client_1.UserRole.ADMIN, client_1.UserRole.MANAGER]), (0, validate_1.validate)(employee_validation_1.updateEmployeeSchema), employee_controller_1.EmployeeController.update);
+router.delete('/:id', (0, auth_1.authorizeRoles)([client_1.UserRole.ADMIN]), employee_controller_1.EmployeeController.delete);
+exports.default = router;

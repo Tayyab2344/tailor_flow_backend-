@@ -1,0 +1,15 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const business_controller_1 = require("./business.controller");
+const validate_1 = require("../../middleware/validate");
+const business_validation_1 = require("./business.validation");
+const auth_1 = require("../../middleware/auth");
+const client_1 = require("@prisma/client");
+const router = (0, express_1.Router)();
+router.use(auth_1.authenticateUser);
+router.post('/', (0, auth_1.authorizeRoles)([client_1.UserRole.ADMIN]), (0, validate_1.validate)(business_validation_1.createBusinessSchema), business_controller_1.BusinessController.create);
+router.get('/', (0, auth_1.authorizeRoles)([client_1.UserRole.ADMIN, client_1.UserRole.MANAGER, client_1.UserRole.TAILOR, client_1.UserRole.RECEPTIONIST, client_1.UserRole.CASHIER]), business_controller_1.BusinessController.get);
+router.put('/', (0, auth_1.authorizeRoles)([client_1.UserRole.ADMIN, client_1.UserRole.MANAGER]), (0, validate_1.validate)(business_validation_1.updateBusinessSchema), business_controller_1.BusinessController.update);
+router.delete('/', (0, auth_1.authorizeRoles)([client_1.UserRole.ADMIN]), business_controller_1.BusinessController.delete);
+exports.default = router;
